@@ -1,94 +1,132 @@
 # 编译原理实验2
 
+## 实验内容
+
 输入一组正则表达式，输出其转换后的最简的确定有限自动机，并根据生成的确定有限自动机完成实验一的任务。（即完成词法分析任务）
-输入一转换图，生成与之等价的正则表达式（未完成）
 
+输入一转换图，生成与之等价的正则表达式
 
-## Getting started
+## 实验准备
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+正则表达式的语义定义：符号表Σ上的正则表达式α定义一个Σ上的一个符号串的集合，记为L(α)，其定义如下：
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+R::=R1|R2	{L(R)=L(R1)∪L(R2)}
 
-## Add your files
+R::=R1R2		{L(R)=L(R1)L(R2)}
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+R::=R1*		{L(R)=⋃_(i=0)^∞▒〖L(R1)〗^i }
 
-```
-cd existing_repo
-git remote add origin http://gitlab.zhuanjie.ltd/Randall/byyl2.git
-git branch -M main
-git push -uf origin main
-```
+R::=(R1)		{L(R)=L(R1)	}
 
-## Integrate with your tools
+R::=a		{a∈Σ,且 L(R)={a} }
 
-- [ ] [Set up project integrations](http://192.168.10.34:8099/Randall/byyl2/-/settings/integrations)
+R::=ε		{ε不是Σ中的元素，L(R)={} }
 
-## Collaborate with your team
+转换图的定义：符号表Σ上转移T是一个带有权值的有向图T=(V,A),这是V是有向图T的顶点集合，其中的元素称之为状态，因此V亦称状态集，A是弧的集合，弧带有一个权α，其是Σ上的一个正则表达式。其满足如下条件：
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+    1. 存在唯一一个状态S0称为开始状态，其无引入弧
+	2. 存在唯一一个状态S1称为终止状态，其无引出弧
 
-## Test and Deploy
+转换图定义的语言记为L(T)，其是Σ上的一个符号串的集合，Σ上的符号串α∈L(T)当且仅当存在一个由开始状态S0到终止状态S1的路径V0α1V1α2……Vn-1αnVn。
 
-Use the built-in continuous integration in GitLab.
+其中V0=S0，Vn=S1，（Vi-1,Vi, αi） (i=1,2,……,n)是T上的弧，且α∈L(α1)……L(αn)。
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+如果A中每个弧上的正则表达式是Σ上的一个符号或ε（无任何符号），则转换图称之为不确定的有限自动机。
+如果A中每个弧上的正则表达式只能是Σ上的符号且任两个弧（V1,V2,α1）、（V’1,V’2,α’1），如果V1=V’1，则V2<>V’2。
 
-***
+## 基本算法
 
-# Editing this README
+### 将正则表达式转换成不确定的有限自动机
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!).  Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+对于一个正则表达式α，构造一个转移图，由开始状态S0引出一个到终止状态S1的弧，（S0,S1, α）。
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+如果有多个正则表达式α1，……，αn，先为每个αi(1<=i<=n)构造一个转换图Ti。建立一个新的转换图T，构造如下：添加一个Sb状态，为Ｔ的开始状态，对每个αi对应的转换图Ti的开始状态Si，添加弧(Sb,Si,ε)。添加一个新状态Se，为T的终止状态，对每个αi对应转换图Ti的终止状态S’i，添加弧（S’i,Sb,ε）。
 
-## Name
-Choose a self-explaining name for your project.
+重复如下操作，直到无状态转换图T无变化
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+对T中的每个弧(S1,S2,α)，将α分解成两个正则表达式α1与α2由运算OP组成，即α=α1　OP　α2。根据OP做如下操作：
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+1. OP是链接运算且α1与α2皆非ε(即不为空串)，则于T中删除弧(S1,S2,α),于T中添加一个状态S，并将弧(S1,S,α1)与(S,S2,α2)添加到T中；
+2. OP是链接运算且α1=(α’)，α2=ε，则于T中删除弧(S1,S2,α)，添加弧(S1,S2,α’)到T中；
+3. OP是或运算，则于T中删除弧(S1,S2,α)，将弧(S1,S2,α1)与弧(S1,S2,α)添加到T中；
+4. OP是闭包运算，且α2=ε，则于T中删除弧(S1,S2,α)，于T中添加一个新状态S，并将弧(S1,S,ε)、(S,S,α1)及(S,S2,ε)添加到T中。
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### 将不确定有限自动机确定化
+不确定有限自动机记为NFA，则按照如下操作构造一个确定有限自动机DFA其与NFA等价。
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+构造NFA中的状态集组成的集合Ｆ，初始时Ｆ为空；
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+将NFA状态集closure({S0})添加到Ｆ中（S0是NFA的开始状态）；
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+重复如下操作，直到Ｆ中无新元素增加止
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+对Ｆ中任一元素Ｓ(NFA的状态集)，对符号表Σ中的每个符号a，将closure(Ｓa)添加到Ｆ中。有关Ｓa定义如下：
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+Ｓa={s | 于Ｓ中存在一个状态s’，使得（s’, s, a）是NFA中的一个弧}
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+定义转移图T如下：则以Ｆ中元素为状态，对Ｆ中每个元素Ｓ，则有弧(Ｓ，Ｓa, a)。如果Ｆ中的元素Ｓ（NFA的状态集）中含有NFA的终止状态，则其Ｓ是T的终止状态。T的开始状态是closure({S0})。
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### 确定有限自动机的化简操作
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+将DFA化简为最简单的sDFA操作如下：
 
-## License
-For open source projects, say how it is licensed.
+建立DFA状态集的一个分划：π，初始时π中仅有两个集合，一个是由DFA中状态组成的集合，另一个不是终止状态组成的集合。
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+重复如下操作
+
+对符号表Σ上的每一个符号a做如下操作
+
+建立一个空分划π0（即π0是一个空的状态集合之集合）
+
+对π中的每个集合Ｓ0
+
+对π中的第i个集合Ｓi
+
+令Ｓ0,i,a={s∈Ｓ0　| 存在弧(s,s1,a)，这里s1∈Ｓi}
+
+If(Ｓ0,i,a非空)将Ｓ0,i,a添加到π0中
+
+将π0记之为π
+
+### 自动生成词法分析程序
+
+类Disjoint:并查集, 用于计算等价关系；
+
+#### 类Automata:有穷自动机：
+
+	1. 有穷状态集(对应有向图中的节点)
+    2. 输入字母表(状态转移边的标注)
+    3. 状态转移规则(对应有向图中的边)
+    4. 初始状态
+    5. 终止状态集
+
+#### 检查转移图的合法性:
+	
+    1. 起始状态必须在状态集中
+	2. 终止状态必须在状态集中
+
+#### 检验是否为确定的有穷自动机(DFA) 标准:
+
+	1. 不能有 epsilon 作为输入的字母
+	2. 存在某状态对于某字母有多种后继状态
+
+## 实验过程
+
+	1. 编写代码
+
+[实验源码](./main.py)
+
+	2. 测试运行(实验环境Windows11 Python3.10 pycharm)，如图：
+ 
+![](./img/1.png)
+
+	3. 输出信息：
+ 
+ ![](./img/2.png)
+ ![](./img/3.png)
+ ![](./img/4.png)
+ ![](./img/5.png)
+   
+## 实验总结
+
+通过本次实验我学会了从正则表达式转NFA(不确定的有穷自动机)、NFA转DFA(确定的有穷自动机)和DFA的最小化。同时我也尝试输出了自动机的转移矩阵和输出自动机的状态转移图。输出自动机的状态转移图使用的是图形可视化软件Graphviz的使用，他能够将将结构信息表示为抽象图形和网络图。在编程过程中程序抛出了ExecutableNotFound的异常信息，经过检查发现为未将Graphviz的安装地址置于系统的环境变量中。状态图中：以圆圈表示状态（圆圈内为状态名），箭头表示状态转移边。以start标记引出箭头指向起始状态，以双圈表示终止状态。
