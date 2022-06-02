@@ -1,0 +1,9 @@
+digraph "最简DFA" {
+	1 [color=black shape=circle]
+	start [shape=plain]
+	start -> 1
+	2 [color=black shape=doublecircle]
+	1 -> 2 [label=a]
+	1 -> 2 [label=b]
+	2 -> 2 [label=a]
+}
